@@ -1,0 +1,35 @@
+name: ci
+
+on: [push, pull_request]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+
+  tests:
+    strategy:
+      matrix:
+        name: [unit]
+        go-version: [1.23]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    name: test (${{ matrix.name }}, ${{ matrix.os }})
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Lint
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |-
+          make fmtcheck staticcheck spellcheck
+
+      - name: Run ${{ matrix.name }}-${{ matrix.os }} tests
+        run: make test

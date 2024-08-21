@@ -1,0 +1,8 @@
+vendor/
+coverage.out
+dist/
+.envrc
+manpages/
+.idea/
+completions/
+
