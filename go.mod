@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/daixiang0/gci v0.13.5
-	github.com/go-critic/go-critic v0.11.4
+	github.com/go-critic/go-critic v0.11.5
 	github.com/golangci/golangci-lint v1.61.0
 	github.com/gotesttools/gotestfmt/v2 v2.5.0
 	github.com/stretchr/testify v1.9.0
