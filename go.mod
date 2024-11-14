@@ -8,7 +8,7 @@ require (
 	github.com/golangci/golangci-lint v1.62.0
 	github.com/gotesttools/gotestfmt/v2 v2.5.0
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
+	golang.org/x/lint v0.0.0-20241112194109-818c5a804067
 	golang.org/x/tools v0.27.0
 	mvdan.cc/gofumpt v0.7.0
 )
