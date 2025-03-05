@@ -2,7 +2,7 @@ module github.com/AndriyKalashnykov/csvtostruct
 
 go 1.23.0
 
-toolchain go1.24.0
+toolchain go1.24.1
 
 require (
 	github.com/daixiang0/gci v0.13.5
@@ -11,7 +11,7 @@ require (
 	github.com/gotesttools/gotestfmt/v2 v2.5.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067
-	golang.org/x/tools v0.30.0
+	golang.org/x/tools v0.31.0
 	mvdan.cc/gofumpt v0.7.0
 )
 
@@ -187,9 +187,9 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac // indirect
-	golang.org/x/mod v0.23.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/mod v0.24.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
