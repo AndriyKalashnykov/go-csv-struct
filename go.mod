@@ -7,10 +7,10 @@ require (
 	github.com/go-critic/go-critic v0.13.0
 	github.com/golangci/golangci-lint v1.64.8
 	github.com/gotesttools/gotestfmt/v2 v2.5.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067
 	golang.org/x/tools v0.36.0
-	mvdan.cc/gofumpt v0.8.0
+	mvdan.cc/gofumpt v0.9.0
 )
 
 require (
