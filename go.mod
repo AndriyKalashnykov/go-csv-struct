@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067
 	golang.org/x/tools v0.36.0
-	mvdan.cc/gofumpt v0.9.0
+	mvdan.cc/gofumpt v0.9.1
 )
 
 require (
