@@ -1,10 +1,10 @@
 module github.com/AndriyKalashnykov/csvtostruct
 
-go 1.25.3
+go 1.25.5
 
 require (
 	github.com/daixiang0/gci v0.13.7
-	github.com/go-critic/go-critic v0.14.2
+	github.com/go-critic/go-critic v0.14.3
 	github.com/golangci/golangci-lint v1.64.8
 	github.com/gotesttools/gotestfmt/v2 v2.5.0
 	github.com/stretchr/testify v1.11.1
