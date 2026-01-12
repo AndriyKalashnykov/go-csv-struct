@@ -9,7 +9,7 @@ require (
 	github.com/gotesttools/gotestfmt/v2 v2.5.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067
-	golang.org/x/tools v0.38.0
+	golang.org/x/tools v0.41.0
 	mvdan.cc/gofumpt v0.9.2
 )
 
@@ -183,10 +183,10 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20251023183803-a4bb9ffd2546 // indirect
-	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
-	golang.org/x/telemetry v0.0.0-20251008203120-078029d740a8 // indirect
+	golang.org/x/mod v0.32.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260109210033-bd525da824e2 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
 	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
