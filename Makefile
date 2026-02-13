@@ -10,6 +10,17 @@ default: help
 help: ## list makefile targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-11s\033[0m %s\n", $$1, $$2}'
 
+deps: ## Download and install dependencies
+	go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
+	go install github.com/securego/gosec/v2/cmd/gosec@latest
+	@command -v misspell > /dev/null 2>&1 || (cd tools/ && go install github.com/client9/misspell/cmd/misspell@latest)
+	@command -v staticcheck > /dev/null 2>&1 || (cd tools/ && go install honnef.co/go/tools/cmd/staticcheck@latest)
+	@command -v gofumpt > /dev/null 2>&1 || (cd tools/ && go install mvdan.cc/gofumpt@latest)
+	@command -v gci > /dev/null 2>&1 || (cd tools/ && go install github.com/daixiang0/gci@latest)
+	gofumpt -w .
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $$(go env GOPATH)/bin
+
+
 .PHONY: fmtcheck
 fmtcheck: ## format check
 	@command -v goimports > /dev/null 2>&1 || (cd tools/ && go install golang.org/x/tools/cmd/goimports@latest)
@@ -27,12 +38,11 @@ fmtcheck: ## format check
 
 .PHONY: spellcheck
 spellcheck: ## spell check
-	@command -v misspell > /dev/null 2>&1 || (cd tools/ && go install github.com/client9/misspell/cmd/misspell@latest)
 	@misspell -locale="US" -error -source="text" **/*
 
 .PHONY: staticcheck
 staticcheck: ## static check
-	@command -v staticcheck > /dev/null 2>&1 || (cd tools/ && go install honnef.co/go/tools/cmd/staticcheck@latest)
+
 	@staticcheck -checks="all" -tests $(GOFMT_FILES)
 
 .PHONY: build
@@ -50,9 +60,7 @@ clean: ## clean up environment
 
 .PHONY: fmt
 fmt: ## format go files
-	@command -v gofumpt > /dev/null 2>&1 || (cd tools/ && go install mvdan.cc/gofumpt@latest)
-	@command -v gci > /dev/null 2>&1 || (cd tools/ && go install github.com/daixiang0/gci@latest)
-	gofumpt -w .
+
 	gci write .
 
 .PHONY: update
@@ -70,3 +78,9 @@ release: ## create and push a new tag
 	@git push origin ${NT}
 	@git push
 	@echo "Done."
+
+critic:
+	gocritic check -enableAll ./...
+
+sec:
+	gosec ./...
