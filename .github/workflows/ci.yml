@@ -31,4 +31,4 @@ jobs:
           make deps fmtcheck staticcheck spellcheck sec critic
 
       - name: Run ${{ matrix.name }}-${{ matrix.os }} tests
-        run: make test
+        run: make deps build test
