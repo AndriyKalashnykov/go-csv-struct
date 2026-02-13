@@ -44,7 +44,7 @@ staticcheck: ## static check
 	@staticcheck -checks="all" -tests $(GOFMT_FILES)
 
 .PHONY: build
-build: fmt ## build golang binary
+build: fmt fmtcheck staticcheck spellcheck sec critic ## build golang binary
 	@go build -ldflags "-X main.version=$(shell git describe --abbrev=0 --tags)" -o $(projectname)
 
 .PHONY: test

@@ -189,7 +189,7 @@ func TestParser_NonPointerInput(t *testing.T) {
 func TestParser_PointerToNonStruct(t *testing.T) {
 	headers := []string{"field1"}
 	newParser, _ := NewCSVStructer(&TestParser1{}, headers)
-	var value string = "test"
+	value := "test"
 	err := newParser.ScanStruct([]string{"value"}, &value) // Pointer to string, not struct
 	assert.Error(t, err)
 	assert.Equal(t, "input should be a pointer to a struct", err.Error())
