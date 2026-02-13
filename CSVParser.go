@@ -30,7 +30,7 @@ func (c *CSVStruct) ValidateHeaders(csvHeaders []string) bool {
 	return true
 }
 
-func (c *CSVStruct) ScanStruct(csvRow []string, inputStruct interface{}) error { //nolint: gocyclo
+func (c *CSVStruct) ScanStruct(csvRow []string, inputStruct interface{}) error { //nolint:gocyclo // complex field type handling required
 	s := reflect.ValueOf(inputStruct)
 	if s.Kind() != reflect.Ptr {
 		return errors.New("input should be a pointer to a struct")

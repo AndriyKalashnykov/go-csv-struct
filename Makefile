@@ -13,17 +13,15 @@ help: ## list makefile targets
 deps: ## Download and install dependencies
 	go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	@command -v misspell > /dev/null 2>&1 || (cd tools/ && go install github.com/client9/misspell/cmd/misspell@latest)
-	@command -v staticcheck > /dev/null 2>&1 || (cd tools/ && go install honnef.co/go/tools/cmd/staticcheck@latest)
-	@command -v gofumpt > /dev/null 2>&1 || (cd tools/ && go install mvdan.cc/gofumpt@latest)
-	@command -v gci > /dev/null 2>&1 || (cd tools/ && go install github.com/daixiang0/gci@latest)
-	gofumpt -w .
+	@command -v misspell > /dev/null 2>&1 || (go install github.com/client9/misspell/cmd/misspell@latest)
+	@command -v staticcheck > /dev/null 2>&1 || (go install honnef.co/go/tools/cmd/staticcheck@latest)
+	@command -v gofumpt > /dev/null 2>&1 || (go install mvdan.cc/gofumpt@latest)
+	@command -v gci > /dev/null 2>&1 || (go install github.com/daixiang0/gci@latest)
+	@command -v goimports > /dev/null 2>&1 || (go install golang.org/x/tools/cmd/goimports@latest)
 	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $$(go env GOPATH)/bin
-
 
 .PHONY: fmtcheck
 fmtcheck: ## format check
-	@command -v goimports > /dev/null 2>&1 || (cd tools/ && go install golang.org/x/tools/cmd/goimports@latest)
 	@CHANGES="$$(goimports -d $(GOFMT_FILES))"; \
 		if [ -n "$${CHANGES}" ]; then \
 			echo "Unformatted (run goimports -w .):\n\n$${CHANGES}\n\n"; \
@@ -40,13 +38,13 @@ fmtcheck: ## format check
 spellcheck: ## spell check
 	@misspell -locale="US" -error -source="text" **/*
 
-.PHONY: staticcheck
+.PHONY: staticchec
 staticcheck: ## static check
 
 	@staticcheck -checks="all" -tests $(GOFMT_FILES)
 
 .PHONY: build
-build: ## build golang binary
+build: fmt ## build golang binary
 	@go build -ldflags "-X main.version=$(shell git describe --abbrev=0 --tags)" -o $(projectname)
 
 .PHONY: test
@@ -60,8 +58,8 @@ clean: ## clean up environment
 
 .PHONY: fmt
 fmt: ## format go files
-
-	gci write .
+	@gofumpt -w .
+	@gci write .
 
 .PHONY: update
 update: ## update dependency packages to latest versions
