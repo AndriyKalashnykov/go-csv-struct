@@ -11,17 +11,26 @@ Module path: `github.com/AndriyKalashnykov/csvtostruct`
 ## Build & Development Commands
 
 ```bash
-make deps          # Install all tool dependencies (golangci-lint, gofumpt, gci, goimports, gocritic, gosec, etc.)
-make fmt           # Format code (gofumpt + gci)
-make fmtcheck      # Check formatting without modifying files
-make staticcheck   # Run staticcheck
-make spellcheck    # Run misspell
-make critic        # Run gocritic check -enableAll
-make sec           # Run gosec
-make build         # Full build: fmt, fmtcheck, staticcheck, spellcheck, sec, critic, then go build
-make test          # Run tests with coverage (cleans first)
-make clean         # Remove coverage.out, dist/, completions/, manpages/, binary
-make update        # Update all dependencies to latest
+make deps           # Install all tool dependencies (pinned versions)
+make fmt            # Format code (gofumpt + gci)
+make fmtcheck       # Check formatting without modifying files
+make staticcheck    # Run staticcheck
+make spellcheck     # Run misspell
+make critic         # Run gocritic check -enableAll
+make sec            # Run gosec
+make vulncheck      # Run govulncheck on dependencies
+make secrets        # Scan for hardcoded secrets (gitleaks)
+make static-check   # Run all static analysis checks
+make build          # Format and compile (go build)
+make test           # Run tests with coverage (cleans first)
+make coverage       # Run tests with HTML coverage report
+make coverage-check # Verify coverage meets 80% threshold
+make fuzz           # Run fuzz tests for 30 seconds
+make ci             # Run full CI pipeline locally
+make ci-full        # Run full CI pipeline including coverage
+make check          # Run pre-commit checklist
+make clean          # Remove build artifacts and test cache
+make update         # Update all dependencies to latest
 ```
 
 Run a single test:
@@ -40,7 +49,7 @@ This is a single-package library (`package csv`) with two files:
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR: lint (`fmtcheck`, `staticcheck`, `spellcheck`, `sec`, `critic`) then `build` and `test`.
+GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR: `static-check` (fmtcheck, staticcheck, spellcheck, sec, critic, vulncheck, secrets) then `build` and `test`.
 
 ## Testing Notes
 

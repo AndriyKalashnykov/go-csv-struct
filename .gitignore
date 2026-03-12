@@ -1,6 +1,7 @@
 vendor/
 coverage.out
 dist/
+output/
 .envrc
 manpages/
 .idea/

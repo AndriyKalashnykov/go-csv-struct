@@ -3,23 +3,34 @@ projectname?=go-csv-struct
 GOFMT_FILES = $(shell go list -f '{{.Dir}}' ./...)
 CURRENTTAG:=$(shell git describe --tags --abbrev=0)
 NEWTAG ?= $(shell bash -c 'read -p "Please provide a new tag (current tag - ${CURRENTTAG}): " newtag; echo $$newtag')
+GOFLAGS ?= -mod=mod
+
+HOMEDIR := $(CURDIR)
+OUTDIR  := $(HOMEDIR)/output
+COVPROF := $(HOMEDIR)/coverage.out
 
 default: help
 
 .PHONY: help
 help: ## list makefile targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-14s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: deps
 deps: ## download and install dependencies
-	go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
-	go install github.com/securego/gosec/v2/cmd/gosec@latest
-	@command -v misspell > /dev/null 2>&1 || (go install github.com/client9/misspell/cmd/misspell@latest)
-	@command -v staticcheck > /dev/null 2>&1 || (go install honnef.co/go/tools/cmd/staticcheck@latest)
-	@command -v gofumpt > /dev/null 2>&1 || (go install mvdan.cc/gofumpt@latest)
-	@command -v gci > /dev/null 2>&1 || (go install github.com/daixiang0/gci@latest)
-	@command -v goimports > /dev/null 2>&1 || (go install golang.org/x/tools/cmd/goimports@latest)
-	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $$(go env GOPATH)/bin
+	@command -v gocritic > /dev/null 2>&1 || { echo "Installing gocritic..."; go install github.com/go-critic/go-critic/cmd/gocritic@v0.14.3; }
+	@command -v gosec > /dev/null 2>&1 || { echo "Installing gosec..."; go install github.com/securego/gosec/v2/cmd/gosec@v2.22.4; }
+	@command -v misspell > /dev/null 2>&1 || { echo "Installing misspell..."; go install github.com/client9/misspell/cmd/misspell@v0.3.4; }
+	@command -v staticcheck > /dev/null 2>&1 || { echo "Installing staticcheck..."; go install honnef.co/go/tools/cmd/staticcheck@v0.7.0; }
+	@command -v gofumpt > /dev/null 2>&1 || { echo "Installing gofumpt..."; go install mvdan.cc/gofumpt@v0.9.2; }
+	@command -v gci > /dev/null 2>&1 || { echo "Installing gci..."; go install github.com/daixiang0/gci@v0.14.0; }
+	@command -v goimports > /dev/null 2>&1 || { echo "Installing goimports..."; go install golang.org/x/tools/cmd/goimports@v0.43.0; }
+	@command -v govulncheck > /dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@latest; }
+	@command -v gitleaks > /dev/null 2>&1 || { echo "Installing gitleaks..."; go install github.com/zricethezav/gitleaks/v8@v8.24.0; }
+
+.PHONY: fmt
+fmt: ## format go files
+	@gofumpt -w .
+	@gci write .
 
 .PHONY: fmtcheck
 fmtcheck: ## format check
@@ -43,31 +54,70 @@ spellcheck: ## spell check
 staticcheck: ## static check
 	@staticcheck -checks="all" -tests $(GOFMT_FILES)
 
+.PHONY: critic
+critic: ## run gocritic
+	gocritic check -enableAll ./...
+
+.PHONY: sec
+sec: ## run gosec security scanner
+	gosec ./...
+
+.PHONY: vulncheck
+vulncheck: deps ## run Go vulnerability check on dependencies
+	govulncheck ./...
+
+.PHONY: secrets
+secrets: deps ## scan for hardcoded secrets in source code and git history
+	gitleaks detect --source . --verbose --redact
+
+.PHONY: static-check
+static-check: deps fmtcheck staticcheck spellcheck sec critic vulncheck secrets ## run all static analysis checks
+	@echo "Static check done."
+
 .PHONY: build
-build: fmt fmtcheck staticcheck spellcheck sec critic ## build and verify compilation
+build: fmt ## build and verify compilation
 	@go build ./...
 
 .PHONY: test
-test: clean ## display test coverage
-	go test --cover -parallel=1 -v -coverprofile=coverage.out ./...
-	go tool cover -func=coverage.out | sort -rnk3
+test: clean ## run tests with coverage
+	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) ./...
+	go tool cover -func=$(COVPROF) | sort -rnk3
+
+.PHONY: coverage
+coverage: clean ## run tests with HTML coverage report
+	@mkdir -p $(OUTDIR)
+	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) -covermode=atomic ./...
+	@go tool cover -func=$(COVPROF)
+	@go tool cover -html=$(COVPROF) -o $(OUTDIR)/coverage.html
+	@echo "Coverage report: $(OUTDIR)/coverage.html"
+
+.PHONY: coverage-check
+coverage-check: coverage ## verify coverage meets 80% threshold
+	@TOTAL=$$(go tool cover -func=$(COVPROF) | grep total | awk '{print $$3}' | tr -d '%'); \
+	echo "Coverage: $${TOTAL}%"; \
+	if awk "BEGIN {exit !($${TOTAL} < 80)}"; then \
+		echo "FAIL: Coverage $${TOTAL}% is below 80% threshold"; exit 1; \
+	else \
+		echo "PASS: Coverage meets 80% threshold"; \
+	fi
+
+.PHONY: fuzz
+fuzz: ## run fuzz tests for 30 seconds
+	@export GOFLAGS=$(GOFLAGS); go test ./... -fuzz=Fuzz -fuzztime=30s
 
 .PHONY: clean
 clean: ## clean up environment
-	@rm -rf coverage.out dist/ completions/ manpages/ $(projectname)
-
-.PHONY: fmt
-fmt: ## format go files
-	@gofumpt -w .
-	@gci write .
+	@rm -rf $(COVPROF) $(OUTDIR) dist/ completions/ manpages/ $(projectname)
+	@go clean -testcache
 
 .PHONY: update
 update: ## update dependency packages to latest versions
 	@go get -u ./...; go mod tidy
 
 .PHONY: release
-release: ## create and push a new tag
+release: static-check test build ## create and push a new tag
 	$(eval NT=$(NEWTAG))
+	@echo "$(NT)" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "Error: Tag must match vN.N.N"; exit 1; }
 	@echo -n "Are you sure to create and push ${NT} tag? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@echo ${NT} > ./version.txt
 	@git add -A
@@ -77,10 +127,14 @@ release: ## create and push a new tag
 	@git push
 	@echo "Done."
 
-.PHONY: critic
-critic: ## run gocritic
-	gocritic check -enableAll ./...
+.PHONY: ci
+ci: static-check build test ## run full CI pipeline locally
+	@echo "Local CI pipeline passed."
 
-.PHONY: sec
-sec: ## run gosec security scanner
-	gosec ./...
+.PHONY: ci-full
+ci-full: static-check build coverage-check ## run full CI pipeline including coverage
+	@echo "Full CI pipeline passed."
+
+.PHONY: check
+check: static-check test build ## run pre-commit checklist
+	@echo "All pre-commit checks passed."
