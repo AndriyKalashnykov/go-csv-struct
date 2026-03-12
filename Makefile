@@ -2,15 +2,16 @@ projectname?=go-csv-struct
 
 GOFMT_FILES = $(shell go list -f '{{.Dir}}' ./...)
 CURRENTTAG:=$(shell git describe --tags --abbrev=0)
-NEWTAG ?= $(shell bash -c 'read -p "Please provide a new tag (currnet tag - ${CURRENTTAG}): " newtag; echo $$newtag')
+NEWTAG ?= $(shell bash -c 'read -p "Please provide a new tag (current tag - ${CURRENTTAG}): " newtag; echo $$newtag')
 
 default: help
 
 .PHONY: help
 help: ## list makefile targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-11s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
-deps: ## Download and install dependencies
+.PHONY: deps
+deps: ## download and install dependencies
 	go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
 	@command -v misspell > /dev/null 2>&1 || (go install github.com/client9/misspell/cmd/misspell@latest)
@@ -36,22 +37,21 @@ fmtcheck: ## format check
 
 .PHONY: spellcheck
 spellcheck: ## spell check
-	@misspell -locale="US" -error -source="text" **/*
+	@find . -type f \( -name '*.go' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.txt' -o -name '*.csv' \) -not -path './.git/*' -not -path './vendor/*' | xargs misspell -locale="US" -error -source="text"
 
-.PHONY: staticchec
+.PHONY: staticcheck
 staticcheck: ## static check
-
 	@staticcheck -checks="all" -tests $(GOFMT_FILES)
 
 .PHONY: build
-build: fmt fmtcheck staticcheck spellcheck sec critic ## build golang binary
-	@go build -ldflags "-X main.version=$(shell git describe --abbrev=0 --tags)" -o $(projectname)
+build: fmt fmtcheck staticcheck spellcheck sec critic ## build and verify compilation
+	@go build ./...
 
 .PHONY: test
 test: clean ## display test coverage
 	go test --cover -parallel=1 -v -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out | sort -rnk3
-		
+
 .PHONY: clean
 clean: ## clean up environment
 	@rm -rf coverage.out dist/ completions/ manpages/ $(projectname)
@@ -77,8 +77,10 @@ release: ## create and push a new tag
 	@git push
 	@echo "Done."
 
-critic:
+.PHONY: critic
+critic: ## run gocritic
 	gocritic check -enableAll ./...
 
-sec:
+.PHONY: sec
+sec: ## run gosec security scanner
 	gosec ./...
