@@ -49,7 +49,7 @@ This is a single-package library (`package csv`) with two files:
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR: `static-check` (fmtcheck, staticcheck, spellcheck, sec, critic, vulncheck, secrets) then `build` and `test`.
+GitHub Actions (`.github/workflows/ci.yml`) runs three parallel jobs on push/PR: `lint` (static-check: fmtcheck, staticcheck, spellcheck, sec, critic, vulncheck, secrets), `build` (fmt + go build), and `test` (coverage-check with 80% threshold).
 
 ## Testing Notes
 

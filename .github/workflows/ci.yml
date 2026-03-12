@@ -3,18 +3,31 @@ name: ci
 on: [push, pull_request]
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 jobs:
 
-  tests:
-    strategy:
-      matrix:
-        name: [unit]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-    name: test (${{ matrix.name }}, ${{ matrix.os }})
+  lint:
+    runs-on: ubuntu-latest
+    name: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0 # needed for gitleaks git history scan
+
+      - name: Set up Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Static check
+        run: make static-check
+
+  build:
+    runs-on: ubuntu-latest
+    name: build
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -25,9 +38,21 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
-      - name: Lint
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: make static-check
+      - name: Build
+        run: make build
 
-      - name: Run ${{ matrix.name }}-${{ matrix.os }} tests
-        run: make build test
+  test:
+    runs-on: ubuntu-latest
+    name: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Test with coverage check (80% threshold)
+        run: make coverage-check
