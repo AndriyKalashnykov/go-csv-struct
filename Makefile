@@ -1,7 +1,7 @@
 projectname?=go-csv-struct
 
 GOFMT_FILES = $(shell go list -f '{{.Dir}}' ./...)
-CURRENTTAG:=$(shell git describe --tags --abbrev=0)
+CURRENTTAG:=$(shell git describe --tags --abbrev=0 2>/dev/null || echo "none")
 NEWTAG ?= $(shell bash -c 'read -p "Please provide a new tag (current tag - ${CURRENTTAG}): " newtag; echo $$newtag')
 GOFLAGS ?= -mod=mod
 
