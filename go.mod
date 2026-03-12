@@ -1,6 +1,6 @@
 module github.com/AndriyKalashnykov/csvtostruct
 
-go 1.26
+go 1.26.0
 
 require (
 	github.com/daixiang0/gci v0.14.0
