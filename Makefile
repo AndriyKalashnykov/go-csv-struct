@@ -1,6 +1,7 @@
 projectname?=go-csv-struct
 
-GOFMT_FILES = $(shell go list -f '{{.Dir}}' ./...)
+PKGS         = $(shell go list ./... | grep -v /example)
+GOFMT_FILES  = $(shell go list -f '{{.Dir}}' ./...)
 CURRENTTAG:=$(shell git describe --tags --abbrev=0 2>/dev/null || echo "none")
 NEWTAG ?= $(shell bash -c 'read -p "Please provide a new tag (current tag - ${CURRENTTAG}): " newtag; echo $$newtag')
 GOFLAGS ?= -mod=mod
@@ -80,13 +81,13 @@ build: fmt ## build and verify compilation
 
 .PHONY: test
 test: clean ## run tests with coverage
-	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) ./...
+	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) $(PKGS)
 	go tool cover -func=$(COVPROF) | sort -rnk3
 
 .PHONY: coverage
 coverage: clean ## run tests with HTML coverage report
 	@mkdir -p $(OUTDIR)
-	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) -covermode=atomic ./...
+	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) -covermode=atomic $(PKGS)
 	go tool cover -func=$(COVPROF)
 	go tool cover -html=$(COVPROF) -o $(OUTDIR)/coverage.html
 	@echo "Coverage report: $(OUTDIR)/coverage.html"

@@ -10,8 +10,8 @@ import (
 )
 
 type Record struct {
-	Name  string `csv:"name"`
-	Age   int    `csv:"age"`
+	Name  string  `csv:"name"`
+	Age   int     `csv:"age"`
 	Score float64 `csv:"score"`
 }
 
