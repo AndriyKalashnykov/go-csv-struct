@@ -37,7 +37,7 @@ fmtcheck: ## format check
 
 .PHONY: spellcheck
 spellcheck: ## spell check
-	@find . -type f \( -name '*.go' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.txt' -o -name '*.csv' \) -not -path './.git/*' -not -path './vendor/*' | xargs misspell -locale="US" -error -source="text"
+	@find . -type f \( -name '*.go' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.txt' -o -name '*.csv' \) -not -path './.git/*' -not -path './vendor/*' -print0 | xargs -0 misspell -locale="US" -error -source="text"
 
 .PHONY: staticcheck
 staticcheck: ## static check
