@@ -28,12 +28,12 @@ deps: ## download and install dependencies
 	@command -v gitleaks > /dev/null 2>&1 || { echo "Installing gitleaks..."; go install github.com/zricethezav/gitleaks/v8@v8.24.0; }
 
 .PHONY: fmt
-fmt: ## format go files
-	@gofumpt -w .
-	@gci write .
+fmt: deps ## format go files
+	gofumpt -w .
+	gci write .
 
 .PHONY: fmtcheck
-fmtcheck: ## format check
+fmtcheck: deps ## format check
 	@CHANGES="$$(goimports -d $(GOFMT_FILES))"; \
 		if [ -n "$${CHANGES}" ]; then \
 			echo "Unformatted (run goimports -w .):\n\n$${CHANGES}\n\n"; \
@@ -47,19 +47,19 @@ fmtcheck: ## format check
 		fi
 
 .PHONY: spellcheck
-spellcheck: ## spell check
+spellcheck: deps ## spell check
 	@find . -type f \( -name '*.go' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.txt' -o -name '*.csv' \) -not -path './.git/*' -not -path './vendor/*' -print0 | xargs -0 misspell -locale="US" -error -source="text"
 
 .PHONY: staticcheck
-staticcheck: ## static check
-	@staticcheck -checks="all" -tests $(GOFMT_FILES)
+staticcheck: deps ## static check
+	staticcheck -checks="all" -tests $(GOFMT_FILES)
 
 .PHONY: critic
-critic: ## run gocritic
+critic: deps ## run gocritic
 	gocritic check -enableAll ./...
 
 .PHONY: sec
-sec: ## run gosec security scanner
+sec: deps ## run gosec security scanner
 	gosec ./...
 
 .PHONY: vulncheck
@@ -76,7 +76,7 @@ static-check: deps fmtcheck staticcheck spellcheck sec critic vulncheck secrets 
 
 .PHONY: build
 build: fmt ## build and verify compilation
-	@go build ./...
+	go build ./...
 
 .PHONY: test
 test: clean ## run tests with coverage
@@ -87,8 +87,8 @@ test: clean ## run tests with coverage
 coverage: clean ## run tests with HTML coverage report
 	@mkdir -p $(OUTDIR)
 	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) -covermode=atomic ./...
-	@go tool cover -func=$(COVPROF)
-	@go tool cover -html=$(COVPROF) -o $(OUTDIR)/coverage.html
+	go tool cover -func=$(COVPROF)
+	go tool cover -html=$(COVPROF) -o $(OUTDIR)/coverage.html
 	@echo "Coverage report: $(OUTDIR)/coverage.html"
 
 .PHONY: coverage-check
@@ -108,11 +108,11 @@ fuzz: ## run fuzz tests for 30 seconds
 .PHONY: clean
 clean: ## clean up environment
 	@rm -rf $(COVPROF) $(OUTDIR) dist/ completions/ manpages/ $(projectname)
-	@go clean -testcache
+	go clean -testcache
 
 .PHONY: update
 update: ## update dependency packages to latest versions
-	@go get -u ./...; go mod tidy
+	go get -u ./...; go mod tidy
 
 .PHONY: release
 release: static-check test build ## create and push a new tag
