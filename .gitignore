@@ -7,3 +7,4 @@ manpages/
 .idea/
 completions/
 go-csv-struct
+example/example

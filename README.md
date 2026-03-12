@@ -9,34 +9,76 @@ Go Package to convert CSV fields to Struct
 
 # About
 
-csvtostruct is a minimalistic package to help you convert your CSV records to struct objects. csvtostruct also supports the
-use of nested structs.
+`csvtostruct` converts CSV records into Go structs using `csv` struct tags. It supports nested structs and the following field types: `string`, `int`, `bool`, `float32`, `float64`. Fields without a `csv` tag are skipped.
 
 # Usage
 
-```
-type testParser1 struct {
-	Field1 string `csv:"field1"`
-	Field2 int    `csv:"field2"`
+See the complete runnable example in [`example/`](example/).
+
+```go
+package main
+
+import (
+	"encoding/csv"
+	"fmt"
+	"io"
+	"os"
+
+	csvtostruct "github.com/AndriyKalashnykov/csvtostruct"
+)
+
+type Record struct {
+	Name  string  `csv:"name"`
+	Age   int     `csv:"age"`
+	Score float64 `csv:"score"`
 }
-headerFields := []string{"field1" , "field2"}
-row := 0
-for {
-	record, err := testFile.Read()
-	if err == io.EOF {
-		break
+
+func main() {
+	file, err := os.Open("test.csv")
+	if err != nil {
+		fmt.Println("error opening file:", err)
+		return
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+
+	// Read the header row
+	headers, err := reader.Read()
+	if err != nil {
+		fmt.Println("error reading headers:", err)
+		return
 	}
 
-    newCSVParser := csv.NewCSVStructer(&testParser1{}, headerFields)
-    if row == 0 {
-      if !csv.ValidateHeaders(record) {
-	break
-      }
-      row+=1
-    }
-    var parser testParser1
-    err := csv.ScanStruct(record , &parser)
-    // Now parser struct will contain the csv record
+	// Create a parser and validate headers
+	parser, err := csvtostruct.NewCSVStructer(&Record{}, headers)
+	if err != nil {
+		fmt.Println("error creating parser:", err)
+		return
+	}
+	if !parser.ValidateHeaders(headers) {
+		fmt.Println("CSV headers do not match struct tags")
+		return
+	}
+
+	// Read and parse each data row
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Println("error reading record:", err)
+			continue
+		}
+
+		var r Record
+		if err := parser.ScanStruct(record, &r); err != nil {
+			fmt.Println("parse error:", err)
+			continue
+		}
+		fmt.Printf("%+v\n", r)
+	}
 }
 ```
 
