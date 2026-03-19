@@ -49,7 +49,7 @@ This is a single-package library (`package csv`) with two files:
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs three parallel jobs on push/PR: `lint` (static-check: fmtcheck, staticcheck, spellcheck, sec, critic, vulncheck, secrets), `build` (fmt + go build), and `test` (coverage-check with 80% threshold).
+GitHub Actions (`.github/workflows/ci.yml`) triggers on pushes and PRs to `main` only, with concurrency control that cancels in-progress runs on the same ref. The `build` job runs first (fmt + go build); `lint` and `test` run in parallel after build passes (`needs: build`). `lint` runs static-check (fmtcheck, staticcheck, spellcheck, sec, critic, vulncheck, secrets). `test` runs coverage-check with an 80% threshold and uploads `coverage.out` as an artifact. All jobs have a 10-minute timeout and cache Go tool binaries across runs.
 
 ## Testing Notes
 
