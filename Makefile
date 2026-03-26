@@ -1,5 +1,16 @@
 projectname?=go-csv-struct
 
+# Tool versions
+GOCRITIC_VERSION     := v0.14.3
+GOSEC_VERSION        := v2.22.4
+MISSPELL_VERSION     := v0.3.4
+STATICCHECK_VERSION  := v0.7.0
+GOFUMPT_VERSION      := v0.9.2
+GCI_VERSION          := v0.14.0
+GOIMPORTS_VERSION    := v0.43.0
+GOVULNCHECK_VERSION  := v1.1.4
+GITLEAKS_VERSION     := v8.24.0
+
 PKGS         = $(shell go list ./... | grep -v /example)
 GOFMT_FILES  = $(shell go list -f '{{.Dir}}' ./...)
 CURRENTTAG:=$(shell git describe --tags --abbrev=0 2>/dev/null || echo "none")
@@ -10,7 +21,7 @@ HOMEDIR := $(CURDIR)
 OUTDIR  := $(HOMEDIR)/output
 COVPROF := $(HOMEDIR)/coverage.out
 
-default: help
+.DEFAULT_GOAL := help
 
 .PHONY: help
 help: ## list makefile targets
@@ -18,20 +29,20 @@ help: ## list makefile targets
 
 .PHONY: deps
 deps: ## download and install dependencies
-	@command -v gocritic > /dev/null 2>&1 || { echo "Installing gocritic..."; go install github.com/go-critic/go-critic/cmd/gocritic@v0.14.3; }
-	@command -v gosec > /dev/null 2>&1 || { echo "Installing gosec..."; go install github.com/securego/gosec/v2/cmd/gosec@v2.22.4; }
-	@command -v misspell > /dev/null 2>&1 || { echo "Installing misspell..."; go install github.com/client9/misspell/cmd/misspell@v0.3.4; }
-	@command -v staticcheck > /dev/null 2>&1 || { echo "Installing staticcheck..."; go install honnef.co/go/tools/cmd/staticcheck@v0.7.0; }
-	@command -v gofumpt > /dev/null 2>&1 || { echo "Installing gofumpt..."; go install mvdan.cc/gofumpt@v0.9.2; }
-	@command -v gci > /dev/null 2>&1 || { echo "Installing gci..."; go install github.com/daixiang0/gci@v0.14.0; }
-	@command -v goimports > /dev/null 2>&1 || { echo "Installing goimports..."; go install golang.org/x/tools/cmd/goimports@v0.43.0; }
-	@command -v govulncheck > /dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@v1.1.4; }
-	@command -v gitleaks > /dev/null 2>&1 || { echo "Installing gitleaks..."; go install github.com/zricethezav/gitleaks/v8@v8.24.0; }
+	@command -v gocritic > /dev/null 2>&1 || { echo "Installing gocritic..."; go install github.com/go-critic/go-critic/cmd/gocritic@$(GOCRITIC_VERSION); }
+	@command -v gosec > /dev/null 2>&1 || { echo "Installing gosec..."; go install github.com/securego/gosec/v2/cmd/gosec@$(GOSEC_VERSION); }
+	@command -v misspell > /dev/null 2>&1 || { echo "Installing misspell..."; go install github.com/client9/misspell/cmd/misspell@$(MISSPELL_VERSION); }
+	@command -v staticcheck > /dev/null 2>&1 || { echo "Installing staticcheck..."; go install honnef.co/go/tools/cmd/staticcheck@$(STATICCHECK_VERSION); }
+	@command -v gofumpt > /dev/null 2>&1 || { echo "Installing gofumpt..."; go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION); }
+	@command -v gci > /dev/null 2>&1 || { echo "Installing gci..."; go install github.com/daixiang0/gci@$(GCI_VERSION); }
+	@command -v goimports > /dev/null 2>&1 || { echo "Installing goimports..."; go install golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION); }
+	@command -v govulncheck > /dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION); }
+	@command -v gitleaks > /dev/null 2>&1 || { echo "Installing gitleaks..."; go install github.com/zricethezav/gitleaks/v8@$(GITLEAKS_VERSION); }
 
 .PHONY: fmt
 fmt: deps ## format go files
-	gofumpt -w .
-	gci write .
+	@gofumpt -w .
+	@gci write .
 
 .PHONY: fmtcheck
 fmtcheck: deps ## format check
@@ -53,43 +64,50 @@ spellcheck: deps ## spell check
 
 .PHONY: staticcheck
 staticcheck: deps ## static check
-	staticcheck -checks="all" -tests $(GOFMT_FILES)
+	@staticcheck -checks="all" -tests $(GOFMT_FILES)
 
 .PHONY: critic
 critic: deps ## run gocritic
-	gocritic check -enableAll ./...
+	@gocritic check -enableAll ./...
 
 .PHONY: sec
 sec: deps ## run gosec security scanner
-	gosec ./...
+	@gosec ./...
 
 .PHONY: vulncheck
 vulncheck: deps ## run Go vulnerability check on dependencies
-	govulncheck ./...
+	@govulncheck ./...
 
 .PHONY: secrets
 secrets: deps ## scan for hardcoded secrets in source code and git history
-	gitleaks detect --source . --verbose --redact
+	@gitleaks detect --source . --verbose --redact
 
 .PHONY: static-check
 static-check: deps fmtcheck staticcheck spellcheck sec critic vulncheck secrets ## run all static analysis checks
 	@echo "Static check done."
 
+.PHONY: lint
+lint: static-check ## alias for static-check
+
 .PHONY: build
 build: fmt ## build and verify compilation
-	go build ./...
+	@go build ./...
+
+.PHONY: run
+run: build ## run example application
+	@go run ./example/...
 
 .PHONY: test
 test: clean ## run tests with coverage
-	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) $(PKGS)
-	go tool cover -func=$(COVPROF) | sort -rnk3
+	@go test --cover -parallel=1 -v -coverprofile=$(COVPROF) $(PKGS)
+	@go tool cover -func=$(COVPROF) | sort -rnk3
 
 .PHONY: coverage
 coverage: clean ## run tests with HTML coverage report
 	@mkdir -p $(OUTDIR)
-	go test --cover -parallel=1 -v -coverprofile=$(COVPROF) -covermode=atomic $(PKGS)
-	go tool cover -func=$(COVPROF)
-	go tool cover -html=$(COVPROF) -o $(OUTDIR)/coverage.html
+	@go test --cover -parallel=1 -v -coverprofile=$(COVPROF) -covermode=atomic $(PKGS)
+	@go tool cover -func=$(COVPROF)
+	@go tool cover -html=$(COVPROF) -o $(OUTDIR)/coverage.html
 	@echo "Coverage report: $(OUTDIR)/coverage.html"
 
 .PHONY: coverage-check
@@ -109,11 +127,11 @@ fuzz: ## run fuzz tests for 30 seconds
 .PHONY: clean
 clean: ## clean up environment
 	@rm -rf $(COVPROF) $(OUTDIR) dist/ completions/ manpages/ $(projectname)
-	go clean -testcache
+	@go clean -testcache
 
 .PHONY: update
 update: ## update dependency packages to latest versions
-	go get -u ./...; go mod tidy
+	@go get -u ./...; go mod tidy
 
 .PHONY: release
 release: static-check test build ## create and push a new tag
