@@ -1,6 +1,9 @@
-projectname?=go-csv-struct
+.DEFAULT_GOAL := help
 
-# Tool versions
+APP_NAME       := go-csv-struct
+CURRENTTAG     := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
+
+# === Tool Versions (pinned) ===
 GOCRITIC_VERSION     := v0.14.3
 GOSEC_VERSION        := v2.22.4
 MISSPELL_VERSION     := v0.3.4
@@ -10,25 +13,25 @@ GCI_VERSION          := v0.14.0
 GOIMPORTS_VERSION    := v0.43.0
 GOVULNCHECK_VERSION  := v1.1.4
 GITLEAKS_VERSION     := v8.24.0
+ACT_VERSION          := 0.2.86
+NVM_VERSION          := 0.40.4
 
 PKGS         = $(shell go list ./... | grep -v /example)
 GOFMT_FILES  = $(shell go list -f '{{.Dir}}' ./...)
-CURRENTTAG:=$(shell git describe --tags --abbrev=0 2>/dev/null || echo "none")
-NEWTAG ?= $(shell bash -c 'read -p "Please provide a new tag (current tag - ${CURRENTTAG}): " newtag; echo $$newtag')
-GOFLAGS ?= -mod=mod
+GOFLAGS      ?= -mod=mod
 
 HOMEDIR := $(CURDIR)
 OUTDIR  := $(HOMEDIR)/output
 COVPROF := $(HOMEDIR)/coverage.out
 
-.DEFAULT_GOAL := help
+#help: @ List available tasks
+help:
+	@echo "Usage: make COMMAND"
+	@echo "Commands :"
+	@grep -E '[a-zA-Z\.\-]+:.*?@ .*$$' $(MAKEFILE_LIST)| tr -d '#' | awk 'BEGIN {FS = ":.*?@ "}; {printf "\033[32m%-20s\033[0m - %s\n", $$1, $$2}'
 
-.PHONY: help
-help: ## list makefile targets
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
-
-.PHONY: deps
-deps: ## download and install dependencies
+#deps: @ Install all tool dependencies (pinned versions)
+deps:
 	@command -v gocritic > /dev/null 2>&1 || { echo "Installing gocritic..."; go install github.com/go-critic/go-critic/cmd/gocritic@$(GOCRITIC_VERSION); }
 	@command -v gosec > /dev/null 2>&1 || { echo "Installing gosec..."; go install github.com/securego/gosec/v2/cmd/gosec@$(GOSEC_VERSION); }
 	@command -v misspell > /dev/null 2>&1 || { echo "Installing misspell..."; go install github.com/client9/misspell/cmd/misspell@$(MISSPELL_VERSION); }
@@ -39,13 +42,13 @@ deps: ## download and install dependencies
 	@command -v govulncheck > /dev/null 2>&1 || { echo "Installing govulncheck..."; go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION); }
 	@command -v gitleaks > /dev/null 2>&1 || { echo "Installing gitleaks..."; go install github.com/zricethezav/gitleaks/v8@$(GITLEAKS_VERSION); }
 
-.PHONY: fmt
-fmt: deps ## format go files
+#fmt: @ Format Go files (gofumpt + gci)
+fmt: deps
 	@gofumpt -w .
 	@gci write .
 
-.PHONY: fmtcheck
-fmtcheck: deps ## format check
+#fmtcheck: @ Check formatting without modifying files
+fmtcheck: deps
 	@CHANGES="$$(goimports -d $(GOFMT_FILES))"; \
 		if [ -n "$${CHANGES}" ]; then \
 			echo "Unformatted (run goimports -w .):\n\n$${CHANGES}\n\n"; \
@@ -58,60 +61,62 @@ fmtcheck: deps ## format check
 			exit 1; \
 		fi
 
-.PHONY: spellcheck
-spellcheck: deps ## spell check
+#spellcheck: @ Spell check
+spellcheck: deps
 	@find . -type f \( -name '*.go' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.txt' -o -name '*.csv' \) -not -path './.git/*' -not -path './vendor/*' -print0 | xargs -0 misspell -locale="US" -error -source="text"
 
-.PHONY: staticcheck
-staticcheck: deps ## static check
+#staticcheck: @ Run staticcheck
+staticcheck: deps
 	@staticcheck -checks="all" -tests $(GOFMT_FILES)
 
-.PHONY: critic
-critic: deps ## run gocritic
+#critic: @ Run gocritic
+critic: deps
 	@gocritic check -enableAll ./...
 
-.PHONY: sec
-sec: deps ## run gosec security scanner
+#sec: @ Run gosec security scanner
+sec: deps
 	@gosec ./...
 
-.PHONY: vulncheck
-vulncheck: deps ## run Go vulnerability check on dependencies
+#vulncheck: @ Run Go vulnerability check on dependencies
+vulncheck: deps
 	@govulncheck ./...
 
-.PHONY: secrets
-secrets: deps ## scan for hardcoded secrets in source code and git history
+#secrets: @ Scan for hardcoded secrets in source code and git history
+secrets: deps
 	@gitleaks detect --source . --verbose --redact
 
-.PHONY: static-check
-static-check: deps fmtcheck staticcheck spellcheck sec critic vulncheck secrets ## run all static analysis checks
+#static-check: @ Run all static analysis checks
+static-check: deps fmtcheck staticcheck spellcheck sec critic vulncheck secrets
 	@echo "Static check done."
 
-.PHONY: lint
-lint: static-check ## alias for static-check
+#lint: @ Alias for static-check
+lint: static-check
 
-.PHONY: build
-build: fmt ## build and verify compilation
+#build: @ Build and verify compilation
+build: deps
 	@go build ./...
 
-.PHONY: run
-run: build ## run example application
+#run: @ Run example application
+run: build
 	@go run ./example/...
 
-.PHONY: test
-test: clean ## run tests with coverage
+#test: @ Run tests with coverage
+test: deps
+	@go clean -testcache
 	@go test --cover -parallel=1 -v -coverprofile=$(COVPROF) $(PKGS)
 	@go tool cover -func=$(COVPROF) | sort -rnk3
 
-.PHONY: coverage
-coverage: clean ## run tests with HTML coverage report
+#coverage: @ Run tests with HTML coverage report
+coverage: deps
+	@go clean -testcache
 	@mkdir -p $(OUTDIR)
 	@go test --cover -parallel=1 -v -coverprofile=$(COVPROF) -covermode=atomic $(PKGS)
 	@go tool cover -func=$(COVPROF)
 	@go tool cover -html=$(COVPROF) -o $(OUTDIR)/coverage.html
 	@echo "Coverage report: $(OUTDIR)/coverage.html"
 
-.PHONY: coverage-check
-coverage-check: coverage ## verify coverage meets 80% threshold
+#coverage-check: @ Verify coverage meets 80% threshold
+coverage-check: coverage
 	@TOTAL=$$(go tool cover -func=$(COVPROF) | grep total | awk '{print $$3}' | tr -d '%'); \
 	echo "Coverage: $${TOTAL}%"; \
 	if awk "BEGIN {exit !($${TOTAL} < 80)}"; then \
@@ -120,48 +125,57 @@ coverage-check: coverage ## verify coverage meets 80% threshold
 		echo "PASS: Coverage meets 80% threshold"; \
 	fi
 
-.PHONY: fuzz
-fuzz: ## run fuzz tests for 30 seconds
+#fuzz: @ Run fuzz tests for 30 seconds
+fuzz:
 	@export GOFLAGS=$(GOFLAGS); go test ./... -fuzz=Fuzz -fuzztime=30s
 
-.PHONY: clean
-clean: ## clean up environment
-	@rm -rf $(COVPROF) $(OUTDIR) dist/ completions/ manpages/ $(projectname)
+#clean: @ Clean up environment
+clean:
+	@rm -rf $(COVPROF) $(OUTDIR) dist/ completions/ manpages/ $(APP_NAME)
 	@go clean -testcache
 
-.PHONY: update
-update: ## update dependency packages to latest versions
+#update: @ Update dependency packages to latest versions
+update:
 	@go get -u ./...; go mod tidy
 
-.PHONY: release
-release: static-check test build ## create and push a new tag
-	$(eval NT=$(NEWTAG))
-	@echo "$(NT)" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "Error: Tag must match vN.N.N"; exit 1; }
-	@echo -n "Are you sure to create and push ${NT} tag? [y/N] " && read ans && [ $${ans:-N} = y ]
-	@echo ${NT} > ./version.txt
-	@git add -A
-	@git commit -a -s -m "Cut ${NT} release"
-	@git tag ${NT}
-	@git push origin ${NT}
-	@git push
-	@echo "Done."
+#release: @ Create and push a new tag
+release:
+	@bash -c 'read -p "New tag (current: $(CURRENTTAG)): " newtag && \
+		echo "$$newtag" | grep -qE "^v[0-9]+\.[0-9]+\.[0-9]+$$" || { echo "Error: Tag must match vN.N.N"; exit 1; } && \
+		echo -n "Create and push $$newtag? [y/N] " && read ans && [ "$${ans:-N}" = y ] && \
+		echo $$newtag > ./version.txt && \
+		git add -A && \
+		git commit -a -s -m "Cut $$newtag release" && \
+		git tag $$newtag && \
+		git push origin $$newtag && \
+		git push && \
+		echo "Done."'
 
-.PHONY: ci
-ci: static-check build test ## run full CI pipeline locally
+#ci: @ Run full CI pipeline locally
+ci: static-check build test coverage-check
 	@echo "Local CI pipeline passed."
 
-.PHONY: ci-full
-ci-full: static-check build coverage-check ## run full CI pipeline including coverage
+#ci-full: @ Run full CI pipeline including coverage
+ci-full: static-check build coverage-check
 	@echo "Full CI pipeline passed."
 
-.PHONY: check
-check: static-check test build ## run pre-commit checklist
+#check: @ Run pre-commit checklist
+check: static-check test build
 	@echo "All pre-commit checks passed."
 
-NVM_VERSION := 0.40.4
+#deps-act: @ Install act for local CI
+deps-act: deps
+	@command -v act >/dev/null 2>&1 || { echo "Installing act $(ACT_VERSION)..."; \
+		curl -sSfL https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash -s -- -b /usr/local/bin v$(ACT_VERSION); \
+	}
 
-.PHONY: renovate-bootstrap
-renovate-bootstrap: ## install nvm and npm for Renovate
+#ci-run: @ Run GitHub Actions workflow locally using act
+ci-run: deps-act
+	@act push --container-architecture linux/amd64 \
+		--artifact-server-path /tmp/act-artifacts
+
+#renovate-bootstrap: @ Install nvm and npm for Renovate
+renovate-bootstrap:
 	@command -v node >/dev/null 2>&1 || { \
 		echo "Installing nvm $(NVM_VERSION)..."; \
 		curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v$(NVM_VERSION)/install.sh | bash; \
@@ -170,6 +184,10 @@ renovate-bootstrap: ## install nvm and npm for Renovate
 		nvm install --lts; \
 	}
 
-.PHONY: renovate-validate
-renovate-validate: renovate-bootstrap ## validate Renovate configuration
+#renovate-validate: @ Validate Renovate configuration
+renovate-validate: renovate-bootstrap
 	@npx --yes renovate --platform=local
+
+.PHONY: help deps fmt fmtcheck spellcheck staticcheck critic sec vulncheck secrets \
+	static-check lint build run test coverage coverage-check fuzz clean update release \
+	ci ci-full check deps-act ci-run renovate-bootstrap renovate-validate

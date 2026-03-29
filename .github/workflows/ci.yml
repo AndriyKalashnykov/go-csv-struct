@@ -7,7 +7,7 @@ on:
   pull_request:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
           cache: true
 
       - name: Build
-        run: make deps build
+        run: make build
 
   lint:
     runs-on: ubuntu-latest
@@ -80,7 +80,7 @@ jobs:
           key: go-tools-${{ runner.os }}-${{ hashFiles('Makefile') }}
 
       - name: Test with coverage check (80% threshold)
-        run: make deps coverage-check
+        run: make coverage-check
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7

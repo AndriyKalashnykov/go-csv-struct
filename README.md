@@ -1,17 +1,36 @@
-# go-csv-struct
-
-[![ci](https://github.com/AndriyKalashnykov/go-csv-struct/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AndriyKalashnykov/go-csv-struct/actions/workflows/ci.yml)
+[![CI](https://github.com/AndriyKalashnykov/go-csv-struct/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AndriyKalashnykov/go-csv-struct/actions/workflows/ci.yml)
 [![Hits](https://hits.sh/github.com/AndriyKalashnykov/go-csv-struct.svg?view=today-total&style=plastic)](https://hits.sh/github.com/AndriyKalashnykov/go-csv-struct/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://app.renovatebot.com/dashboard#github/AndriyKalashnykov/go-csv-struct)
 
-Go Package to convert CSV fields to Struct
+# go-csv-struct
 
-# About
+A Go library that converts CSV records into Go structs using reflection and `csv` struct tags. It supports nested structs and the types: `string`, `int`, `bool`, `float32`, `float64`. Fields without a `csv` tag are skipped.
 
-`csvtostruct` converts CSV records into Go structs using `csv` struct tags. It supports nested structs and the following field types: `string`, `int`, `bool`, `float32`, `float64`. Fields without a `csv` tag are skipped.
+## Quick Start
 
-# Usage
+```bash
+make deps      # install tool dependencies
+make build     # compile the project
+make test      # run tests with coverage
+make run       # run the example application
+```
+
+## Prerequisites
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| [Go](https://go.dev/dl/) | 1.24+ | Go runtime and compiler |
+| [GNU Make](https://www.gnu.org/software/make/) | 3.81+ | Build orchestration |
+| [Git](https://git-scm.com/) | 2.0+ | Version control |
+
+Install all required tool dependencies:
+
+```bash
+make deps
+```
+
+## Usage
 
 See the complete runnable example in [`example/`](example/).
 
@@ -82,31 +101,70 @@ func main() {
 }
 ```
 
-# Help
+## Available Make Targets
 
-```text
-Usage: make COMMAND
-Commands :
-  help            - List available tasks
-  deps            - Download and install dependencies
-  fmt             - Format go files
-  fmtcheck        - Format check
-  spellcheck      - Spell check
-  staticcheck     - Static check
-  critic          - Run gocritic
-  sec             - Run gosec security scanner
-  vulncheck       - Run Go vulnerability check on dependencies
-  secrets         - Scan for hardcoded secrets in source code and git history
-  static-check    - Run all static analysis checks
-  build           - Build and verify compilation
-  test            - Run tests with coverage
-  coverage        - Run tests with HTML coverage report
-  coverage-check  - Verify coverage meets 80% threshold
-  fuzz            - Run fuzz tests for 30 seconds
-  clean           - Clean up environment
-  update          - Update dependency packages to latest versions
-  release         - Create and push a new tag
-  ci              - Run full CI pipeline locally
-  ci-full         - Run full CI pipeline including coverage
-  check           - Run pre-commit checklist
-```
+Run `make help` to see all available targets.
+
+### Build & Run
+
+| Target | Description |
+|--------|-------------|
+| `make build` | Build and verify compilation |
+| `make run` | Run example application |
+| `make fmt` | Format Go files (gofumpt + gci) |
+| `make clean` | Clean up environment |
+
+### Code Quality
+
+| Target | Description |
+|--------|-------------|
+| `make lint` | Alias for static-check |
+| `make static-check` | Run all static analysis checks |
+| `make fmtcheck` | Check formatting without modifying files |
+| `make staticcheck` | Run staticcheck |
+| `make spellcheck` | Spell check |
+| `make critic` | Run gocritic |
+| `make sec` | Run gosec security scanner |
+| `make vulncheck` | Run Go vulnerability check on dependencies |
+| `make secrets` | Scan for hardcoded secrets in source code and git history |
+
+### Testing
+
+| Target | Description |
+|--------|-------------|
+| `make test` | Run tests with coverage |
+| `make coverage` | Run tests with HTML coverage report |
+| `make coverage-check` | Verify coverage meets 80% threshold |
+| `make fuzz` | Run fuzz tests for 30 seconds |
+
+### CI
+
+| Target | Description |
+|--------|-------------|
+| `make ci` | Run full CI pipeline locally |
+| `make ci-full` | Run full CI pipeline including coverage |
+| `make ci-run` | Run GitHub Actions workflow locally via [act](https://github.com/nektos/act) |
+| `make check` | Run pre-commit checklist |
+
+### Utilities
+
+| Target | Description |
+|--------|-------------|
+| `make deps` | Install all tool dependencies (pinned versions) |
+| `make update` | Update dependency packages to latest versions |
+| `make release` | Create and push a new tag |
+| `make renovate-validate` | Validate Renovate configuration |
+
+## CI/CD
+
+GitHub Actions runs on every push to `main`, tags `v*`, and pull requests.
+
+| Job | Triggers | Steps |
+|-----|----------|-------|
+| **build** | push, PR, tags | Checkout, Setup Go, Build |
+| **lint** | after build | Checkout, Setup Go, Cache tools, Static check |
+| **test** | after build | Checkout, Setup Go, Cache tools, Coverage check (80%), Upload artifact |
+
+A separate [cleanup workflow](.github/workflows/cleanup-runs.yml) deletes old workflow runs weekly (retains 7 days, minimum 5 runs).
+
+[Renovate](https://docs.renovatebot.com/) keeps dependencies up to date with platform automerge enabled.
