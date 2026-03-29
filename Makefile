@@ -157,3 +157,19 @@ ci-full: static-check build coverage-check ## run full CI pipeline including cov
 .PHONY: check
 check: static-check test build ## run pre-commit checklist
 	@echo "All pre-commit checks passed."
+
+NVM_VERSION := 0.40.4
+
+.PHONY: renovate-bootstrap
+renovate-bootstrap: ## install nvm and npm for Renovate
+	@command -v node >/dev/null 2>&1 || { \
+		echo "Installing nvm $(NVM_VERSION)..."; \
+		curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v$(NVM_VERSION)/install.sh | bash; \
+		export NVM_DIR="$$HOME/.nvm"; \
+		[ -s "$$NVM_DIR/nvm.sh" ] && . "$$NVM_DIR/nvm.sh"; \
+		nvm install --lts; \
+	}
+
+.PHONY: renovate-validate
+renovate-validate: renovate-bootstrap ## validate Renovate configuration
+	@npx --yes renovate --platform=local
