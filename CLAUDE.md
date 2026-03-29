@@ -56,3 +56,16 @@ GitHub Actions (`.github/workflows/ci.yml`) triggers on pushes and PRs to `main`
 - Tests use `testify/assert` (not the stdlib `testing` alone)
 - `test.csv` is a fixture file used by `TestParser_FromCSVFile`
 - The `stretchr/testify` package is the only runtime test dependency
+
+## Skills
+
+Use the following skills when working on related files:
+
+| File(s) | Skill |
+|---------|-------|
+| `Makefile` | `/makefile` |
+| `renovate.json` | `/renovate` |
+| `README.md` | `/readme` |
+| `.github/workflows/*.yml` | `/ci-workflow` |
+
+When spawning subagents, always pass conventions from the respective skill into the agent's prompt.
