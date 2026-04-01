@@ -5,15 +5,15 @@ CURRENTTAG     := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "de
 
 # === Tool Versions (pinned) ===
 GOCRITIC_VERSION     := v0.14.3
-GOSEC_VERSION        := v2.22.4
-MISSPELL_VERSION     := v0.3.4
+GOSEC_VERSION        := v2.25.0
+MISSPELL_VERSION     := v0.8.0
 STATICCHECK_VERSION  := v0.7.0
 GOFUMPT_VERSION      := v0.9.2
 GCI_VERSION          := v0.14.0
 GOIMPORTS_VERSION    := v0.43.0
 GOVULNCHECK_VERSION  := v1.1.4
-GITLEAKS_VERSION     := v8.24.0
-ACT_VERSION          := 0.2.86
+GITLEAKS_VERSION     := v8.30.1
+ACT_VERSION          := 0.2.87
 GVM_SHA              := dd652539fa4b771840846f8319fad303c7d0a8d2 # v1.0.22
 NVM_VERSION          := 0.40.4
 
@@ -70,7 +70,7 @@ deps:
 	fi
 	@$(call go-exec,command -v gocritic) >/dev/null 2>&1 || { echo "Installing gocritic..."; $(call go-exec,go install github.com/go-critic/go-critic/cmd/gocritic@$(GOCRITIC_VERSION)); }
 	@$(call go-exec,command -v gosec) >/dev/null 2>&1 || { echo "Installing gosec..."; $(call go-exec,go install github.com/securego/gosec/v2/cmd/gosec@$(GOSEC_VERSION)); }
-	@$(call go-exec,command -v misspell) >/dev/null 2>&1 || { echo "Installing misspell..."; $(call go-exec,go install github.com/client9/misspell/cmd/misspell@$(MISSPELL_VERSION)); }
+	@$(call go-exec,command -v misspell) >/dev/null 2>&1 || { echo "Installing misspell..."; $(call go-exec,go install github.com/golangci/misspell/cmd/misspell@$(MISSPELL_VERSION)); }
 	@$(call go-exec,command -v staticcheck) >/dev/null 2>&1 || { echo "Installing staticcheck..."; $(call go-exec,go install honnef.co/go/tools/cmd/staticcheck@$(STATICCHECK_VERSION)); }
 	@$(call go-exec,command -v gofumpt) >/dev/null 2>&1 || { echo "Installing gofumpt..."; $(call go-exec,go install mvdan.cc/gofumpt@$(GOFUMPT_VERSION)); }
 	@$(call go-exec,command -v gci) >/dev/null 2>&1 || { echo "Installing gci..."; $(call go-exec,go install github.com/daixiang0/gci@$(GCI_VERSION)); }
