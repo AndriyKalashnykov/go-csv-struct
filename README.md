@@ -20,9 +20,12 @@ make run       # run the example application
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| [Go](https://go.dev/dl/) | 1.24+ | Go runtime and compiler |
 | [GNU Make](https://www.gnu.org/software/make/) | 3.81+ | Build orchestration |
 | [Git](https://git-scm.com/) | 2.0+ | Version control |
+| [curl](https://curl.se/) | any | Downloading tools |
+| [gvm](https://github.com/moovweb/gvm) | latest | Go version management (auto-installed by `make deps`) |
+| [Go](https://go.dev/dl/) | 1.26+ | Go runtime and compiler (installed via gvm) |
+| [act](https://github.com/nektos/act) | 0.2.86+ | Local GitHub Actions execution (optional) |
 
 Install all required tool dependencies:
 
@@ -151,8 +154,14 @@ Run `make help` to see all available targets.
 | Target | Description |
 |--------|-------------|
 | `make deps` | Install all tool dependencies (pinned versions) |
+| `make deps-check` | Show required Go versions and gvm status |
+| `make deps-act` | Install act for local CI |
+| `make deps-prune` | Remove unused Go dependencies |
+| `make deps-prune-check` | Verify no prunable dependencies (CI gate) |
+| `make format` | Alias for fmt |
 | `make update` | Update dependency packages to latest versions |
 | `make release` | Create and push a new tag |
+| `make renovate-bootstrap` | Install nvm and npm for Renovate |
 | `make renovate-validate` | Validate Renovate configuration |
 
 ## CI/CD
