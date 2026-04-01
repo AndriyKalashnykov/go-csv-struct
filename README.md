@@ -168,11 +168,13 @@ Run `make help` to see all available targets.
 
 GitHub Actions runs on every push to `main`, tags `v*`, and pull requests.
 
-| Job | Triggers | Steps |
-|-----|----------|-------|
-| **build** | push, PR, tags | Checkout, Setup Go, Build |
-| **lint** | after build | Checkout, Setup Go, Cache tools, Static check |
-| **test** | after build | Checkout, Setup Go, Cache tools, Coverage check (80%), Upload artifact |
+| Job | Depends on | Steps |
+|-----|------------|-------|
+| **static-check** | — | Checkout (full history), Setup Go, Cache tools, Static check |
+| **build** | static-check | Checkout, Setup Go, Build |
+| **test** | static-check | Checkout, Setup Go, Cache tools, Coverage check (80%), Upload artifact |
+
+Static check runs first (cheapest, fail-fast). Build and test run in parallel after static check passes.
 
 A separate [cleanup workflow](.github/workflows/cleanup-runs.yml) deletes old workflow runs weekly (retains 7 days, minimum 5 runs).
 

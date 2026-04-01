@@ -60,7 +60,7 @@ This is a single-package library (`package csv`) with two files:
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) triggers on pushes to `main`, tags `v*`, and pull requests, with concurrency control that cancels in-progress runs on the same ref. The `build` job runs first (`make build`); `lint` and `test` run in parallel after build passes (`needs: build`). `lint` runs `make static-check` (fmtcheck, staticcheck, spellcheck, sec, critic, vulncheck, secrets) and sets `fetch-depth: 0` for gitleaks git history scanning. `test` runs `make coverage-check` with an 80% threshold and uploads `coverage.out` as an artifact (retained for 14 days). All jobs have a 10-minute timeout and cache Go tool binaries across runs.
+GitHub Actions (`.github/workflows/ci.yml`) triggers on pushes to `main`, tags `v*`, pull requests, and `workflow_call` (reusable), with concurrency control that cancels in-progress runs on the same ref. The `static-check` job runs first (cheapest, fail-fast) with `fetch-depth: 0` for gitleaks git history scanning; `build` and `test` run in parallel after static-check passes (`needs: [static-check]`). `test` runs `make coverage-check` with an 80% threshold and uploads `coverage.out` as an artifact (retained for 14 days). All jobs have a 10-minute timeout. Go tools are cached via `~/go/bin` keyed on Makefile hash.
 
 A separate cleanup workflow (`.github/workflows/cleanup-runs.yml`) deletes old workflow runs weekly.
 

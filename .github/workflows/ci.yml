@@ -1,10 +1,11 @@
-name: ci
+name: CI
 
 on:
   push:
     branches: [main]
     tags: ['v*']
   pull_request:
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,27 +16,8 @@ permissions:
 
 jobs:
 
-  build:
+  static-check:
     runs-on: ubuntu-latest
-    name: build
-    timeout-minutes: 10
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-
-      - name: Set up Go
-        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-
-      - name: Build
-        run: make build
-
-  lint:
-    runs-on: ubuntu-latest
-    name: lint
-    needs: build
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -58,10 +40,26 @@ jobs:
       - name: Static check
         run: make static-check
 
-  test:
+  build:
+    needs: [static-check]
     runs-on: ubuntu-latest
-    name: test
-    needs: build
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Build
+        run: make build
+
+  test:
+    needs: [static-check]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -84,7 +82,7 @@ jobs:
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
-        if: always()
+        continue-on-error: true
         with:
           name: coverage
           path: coverage.out
