@@ -25,7 +25,7 @@ make run       # run the example application
 | [curl](https://curl.se/) | any | Downloading tools |
 | [gvm](https://github.com/moovweb/gvm) | latest | Go version management (auto-installed by `make deps`) |
 | [Go](https://go.dev/dl/) | 1.26+ | Go runtime and compiler (installed via gvm) |
-| [act](https://github.com/nektos/act) | 0.2.86+ | Local GitHub Actions execution (optional) |
+| [act](https://github.com/nektos/act) | 0.2.87+ | Local GitHub Actions execution (optional) |
 
 Install all required tool dependencies:
 

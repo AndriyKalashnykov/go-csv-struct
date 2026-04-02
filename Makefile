@@ -90,21 +90,21 @@ deps-check:
 
 #fmt: @ Format Go files (gofumpt + gci)
 fmt: deps
-	@gofumpt -w .
-	@gci write .
+	@$(call go-exec,gofumpt -w .)
+	@$(call go-exec,gci write .)
 
 #format: @ Alias for fmt
 format: fmt
 
 #fmtcheck: @ Check formatting without modifying files
 fmtcheck: deps
-	@CHANGES="$$(goimports -d $(GOFMT_FILES))"; \
+	@CHANGES="$$($(call go-exec,goimports -d $(GOFMT_FILES)))"; \
 		if [ -n "$${CHANGES}" ]; then \
 			echo "Unformatted (run goimports -w .):\n\n$${CHANGES}\n\n"; \
 			exit 1; \
 		fi
 	@# Annoyingly, goimports does not support the simplify flag.
-	@CHANGES="$$(gofmt -s -d $(GOFMT_FILES))"; \
+	@CHANGES="$$($(call go-exec,gofmt -s -d $(GOFMT_FILES)))"; \
 		if [ -n "$${CHANGES}" ]; then \
 			echo "Unformatted (run gofmt -s -w .):\n\n$${CHANGES}\n\n"; \
 			exit 1; \
@@ -112,27 +112,27 @@ fmtcheck: deps
 
 #spellcheck: @ Spell check
 spellcheck: deps
-	@find . -type f \( -name '*.go' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.txt' -o -name '*.csv' \) -not -path './.git/*' -not -path './vendor/*' -print0 | xargs -0 misspell -locale="US" -error -source="text"
+	@find . -type f \( -name '*.go' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.txt' -o -name '*.csv' \) -not -path './.git/*' -not -path './vendor/*' -print0 | xargs -0 $(call go-exec,misspell -locale="US" -error -source="text")
 
 #staticcheck: @ Run staticcheck
 staticcheck: deps
-	@staticcheck -checks="all" -tests $(GOFMT_FILES)
+	@$(call go-exec,staticcheck -checks="all" -tests $(GOFMT_FILES))
 
 #critic: @ Run gocritic
 critic: deps
-	@gocritic check -enableAll ./...
+	@$(call go-exec,gocritic check -enableAll ./...)
 
 #sec: @ Run gosec security scanner
 sec: deps
-	@gosec ./...
+	@$(call go-exec,gosec ./...)
 
 #vulncheck: @ Run Go vulnerability check on dependencies
 vulncheck: deps
-	@govulncheck ./...
+	@$(call go-exec,govulncheck ./...)
 
 #secrets: @ Scan for hardcoded secrets in source code and git history
 secrets: deps
-	@gitleaks detect --source . --verbose --redact
+	@$(call go-exec,gitleaks detect --source . --verbose --redact)
 
 #static-check: @ Run all static analysis checks
 static-check: deps fmtcheck staticcheck spellcheck sec critic vulncheck secrets
@@ -244,7 +244,7 @@ renovate-bootstrap:
 		curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v$(NVM_VERSION)/install.sh | bash; \
 		export NVM_DIR="$$HOME/.nvm"; \
 		[ -s "$$NVM_DIR/nvm.sh" ] && . "$$NVM_DIR/nvm.sh"; \
-		nvm install --lts; \
+		nvm install 22; \
 	}
 
 #renovate-validate: @ Validate Renovate configuration
