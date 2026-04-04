@@ -54,7 +54,7 @@ go test -run TestParser -v ./...
 This is a single-package library (`package csv`, module path `github.com/AndriyKalashnykov/csvtostruct`) with two files:
 
 - **CSVParser.go** — All library code. `CSVStruct` holds expected headers. `NewCSVStructer()` creates an instance, `ValidateHeaders()` checks CSV headers match, `ScanStruct()` maps a CSV row to a struct pointer using reflection on `csv` struct tags. Nested exported structs are scanned recursively.
-- **CSVParser_test.go** — Tests using `testify/assert`. Covers all supported types, nested structs, unexported field errors, parse errors, non-pointer input, header validation. Also contains fuzz tests for input validation (`make fuzz`).
+- **CSVParser_test.go** — Tests using `testify/assert`. Covers all supported types, nested structs, unexported field errors, parse errors, non-pointer input, header validation.
 
 `tools/tools.go` is a build-tagged (`//go:build tools`) file that pins dev tool dependencies via blank imports.
 
